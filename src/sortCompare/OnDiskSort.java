@@ -14,7 +14,9 @@ import java.util.*;
  */
 public class OnDiskSort {
 
-	// TODO: add instance variables
+	int maxSize;
+	private File workingDirectory;
+	private Sorter<String> sorter;
 
 	/**
 	 * Creates a new sorter for sorting string data on disk. The sorter operates by
@@ -35,7 +37,9 @@ public class OnDiskSort {
 	 *                         the sorter to use to sort the chunks in memory
 	 */
 	public OnDiskSort(int maxSize, File workingDirectory, Sorter<String> sorter) {
-		// TODO: update instance variables
+		this.maxSize = maxSize;
+		this.workingDirectory = workingDirectory;
+		this.sorter = sorter;
 
 		// create directory if it doesn't exist
 		if (!workingDirectory.exists()) {
@@ -127,6 +131,39 @@ public class OnDiskSort {
 		// in repeatedly merging them an increasingly larger sorted file which will be
 		// eventually sorted in outputFile.
 		// Don't forget to create out the working directory when you are done.
+		
+		int fileNumber = 0;
+
+		ArrayList<String> chunk = new ArrayList<>();
+    	ArrayList<File> sortedFiles = new ArrayList<>();
+
+		try {
+			while (dataReader.hasNext()) {
+				if (chunk.size() == maxSize) {
+					sorter.sort(chunk);
+					File tempFile = new File(workingDirectory, fileNumber + ".tempfile");
+					fileNumber++;
+					writeToDisk(tempFile, chunk);
+					sortedFiles.add(tempFile);
+					chunk.clear();
+				}
+			}
+
+			if (!chunk.isEmpty()) {
+				sorter.sort(chunk);
+				File tempFile = new File(workingDirectory, fileNumber + ".tempfile");
+				writeToDisk(tempFile, chunk);
+				sortedFiles.add(tempFile);
+        	}
+
+			mergeFiles(sortedFiles, outputFile);
+        	dataReader.close();
+        	clearOutDirectory(workingDirectory, ".tempfile");
+		} catch (Exception e) {
+			// TODO: handle exception
+		}
+
+
 	}
 
 	/**
