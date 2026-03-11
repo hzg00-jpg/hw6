@@ -127,6 +127,8 @@ public class OnDiskSort {
 
 		try {
 			while (dataReader.hasNext()) {
+				chunk.add(dataReader.next());
+				
 				if (chunk.size() == maxSize) {
 					sorter.sort(chunk);
 					File tempFile = new File(workingDirectory, fileNumber + ".tempfile");
@@ -163,13 +165,28 @@ public class OnDiskSort {
 	 * @param outputFile  the destination file for the final sorted data
 	 */
 	protected void mergeFiles(ArrayList<File> sortedFiles, File outputFile) {
-		// TODO: the easiest way to do this is to have a temporary file that contains
-		// all of
-		// your merged data so far and then just merge in one more file.
-		// To start with, we can just copy the first sortedFile to the temp file and
-		// then
-		// merge in the remaining files linearly.
-		// Look into the copyFile and merge methods and don't forget edge cases.
+		if (sortedFiles.size() == 0) {
+			return;
+		} else if (sortedFiles.size() == 1) {
+			copyFile(sortedFiles.get(0), outputFile);
+			return;
+    	} else {
+			try {
+				File tempFile = new File(workingDirectory, "merge.temp");
+				copyFile(sortedFiles.get(0), tempFile);
+
+				for (int i = 1; i < sortedFiles.size(); i++) {
+					File newTemp = new File(workingDirectory, "merge2.temp");
+					merge(tempFile, sortedFiles.get(i), newTemp);
+					tempFile.delete();
+					tempFile = newTemp;
+				}
+
+				copyFile(tempFile, outputFile);
+			} catch (Exception e) {
+				e.printStackTrace();
+			}		
+		}
 	}
 
 	/**
