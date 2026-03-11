@@ -11,6 +11,7 @@ import java.util.*;
  * files.
  * It then repeatedly merges these temporary files into increasingly larger
  * sorted files until it sorts the entire original dataset.
+ * Extra credit merging method done.
  */
 public class OnDiskSort {
 
@@ -169,18 +170,33 @@ public class OnDiskSort {
 			copyFile(sortedFiles.get(0), outputFile);
 		} else {
 			try {
-				File tempFile = new File(workingDirectory, "merge.temp");
-				copyFile(sortedFiles.get(0), tempFile);
+				File tempFile = new File(workingDirectory, "mergeExtra.temp");
+				ArrayList<File> currentFiles = new ArrayList<>(sortedFiles);
 
-				for (int i = 1; i < sortedFiles.size(); i++) {
-					File outputMerge = new File(workingDirectory, "merge_output.temp");
-					merge(tempFile, sortedFiles.get(i), outputMerge);
-					copyFile(outputMerge, tempFile);
-					outputMerge.delete();
-				}
+				while (currentFiles.size() > 1) {
+					ArrayList<File> nextRound = new ArrayList<>();
+					int i = 0;
 
-				copyFile(tempFile, outputFile);
-				tempFile.delete();
+					while (i < currentFiles.size()) {
+						if (i + 1 < currentFiles.size()) {
+							// merge i and i+1
+							merge(currentFiles.get(i), currentFiles.get(i + 1), tempFile);
+
+							// copies back to first item in pair. for example, merging file3 and
+							// file4 updates file3 and leaves file4 untouched.
+							copyFile(tempFile, currentFiles.get(i));
+							nextRound.add(currentFiles.get(i));
+						} else {
+							nextRound.add(currentFiles.get(i));
+						}
+					i += 2;
+					}
+            		currentFiles = nextRound;
+        		}
+
+        	copyFile(currentFiles.get(0), outputFile);
+        	tempFile.delete();
+
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
@@ -248,9 +264,10 @@ public class OnDiskSort {
 	 */
 	public static void main(String[] args) {
 		MergeSort<String> sorter = new MergeSort<String>();
-		OnDiskSort diskSorter = new OnDiskSort(5, new File("sorting_run"), sorter);
+		// 50 lines, should create 16 tempfiles, 0 to 15
+		OnDiskSort diskSorter = new OnDiskSort(3, new File("sorting_run"), sorter); 
 
-		WordScanner scanner = new WordScanner(new File("sorting_run//Ihaveadream.txt"));
+		WordScanner scanner = new WordScanner(new File("sorting_run//test.txt"));
 
 		System.out.println("running");
 		diskSorter.sort(scanner, new File("sorting_run//data.sorted"));
