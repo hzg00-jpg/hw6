@@ -128,7 +128,7 @@ public class OnDiskSort {
 		try {
 			while (dataReader.hasNext()) {
 				chunk.add(dataReader.next());
-				
+
 				if (chunk.size() == maxSize) {
 					sorter.sort(chunk);
 					File tempFile = new File(workingDirectory, fileNumber + ".tempfile");
@@ -152,8 +152,6 @@ public class OnDiskSort {
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-
-
 	}
 
 	/**
@@ -169,23 +167,23 @@ public class OnDiskSort {
 			return;
 		} else if (sortedFiles.size() == 1) {
 			copyFile(sortedFiles.get(0), outputFile);
-			return;
-    	} else {
+		} else {
 			try {
 				File tempFile = new File(workingDirectory, "merge.temp");
 				copyFile(sortedFiles.get(0), tempFile);
 
 				for (int i = 1; i < sortedFiles.size(); i++) {
-					File newTemp = new File(workingDirectory, "merge2.temp");
-					merge(tempFile, sortedFiles.get(i), newTemp);
-					tempFile.delete();
-					tempFile = newTemp;
+					File outputMerge = new File(workingDirectory, "merge_output.temp");
+					merge(tempFile, sortedFiles.get(i), outputMerge);
+					copyFile(outputMerge, tempFile);
+					outputMerge.delete();
 				}
 
 				copyFile(tempFile, outputFile);
+				tempFile.delete();
 			} catch (Exception e) {
 				e.printStackTrace();
-			}		
+			}
 		}
 	}
 
@@ -250,7 +248,7 @@ public class OnDiskSort {
 	 */
 	public static void main(String[] args) {
 		MergeSort<String> sorter = new MergeSort<String>();
-		OnDiskSort diskSorter = new OnDiskSort(10, new File("sorting_run"), sorter);
+		OnDiskSort diskSorter = new OnDiskSort(5, new File("sorting_run"), sorter);
 
 		WordScanner scanner = new WordScanner(new File("sorting_run//Ihaveadream.txt"));
 
