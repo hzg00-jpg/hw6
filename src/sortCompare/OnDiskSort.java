@@ -120,18 +120,6 @@ public class OnDiskSort {
 	 *                   the destination for the final sorted data
 	 */
 	public void sort(WordScanner dataReader, File outputFile) {
-		// TODO: read one String at a time fro the dataReader and save it in an
-		// ArrayList of maximum capacity maxSize.
-		// When your ArrayList reaches maxSize elements, call the sort method of the
-		// sorter to sort the chunk, write
-		// to disk the temporary file that holds maxSize sorted Strings, and add that
-		// file in an ArrayList of sorted files.
-		// Once this process is completed, call mergeFiles passing the ArrayList of
-		// sorted files which will be responsible
-		// in repeatedly merging them an increasingly larger sorted file which will be
-		// eventually sorted in outputFile.
-		// Don't forget to create out the working directory when you are done.
-		
 		int fileNumber = 0;
 
 		ArrayList<String> chunk = new ArrayList<>();
@@ -160,7 +148,7 @@ public class OnDiskSort {
         	dataReader.close();
         	clearOutDirectory(workingDirectory, ".tempfile");
 		} catch (Exception e) {
-			// TODO: handle exception
+			e.printStackTrace();
 		}
 
 
@@ -193,15 +181,45 @@ public class OnDiskSort {
 	 * @param outFile destination file for the results of merging the two files
 	 */
 	protected void merge(File file1, File file2, File outFile) {
-		// TODO: Open two BufferedReaders to read file1 and file2.
-		// Compare the first line of file1 with the first line of file2.
-		// If it is smaller, add it to the outFile and proceed to the second line of
-		// file1.
-		// If it is larger, add the first line of file2 to the outFile and proceed to
-		// the second line of file2.
-		// If you run out of data from one file, you know that the data from the second
-		// contain only "larger" Strings.
-		// You can just append them to the outFile.
+		try {
+			BufferedReader reader1 = new BufferedReader(new FileReader(file1));
+			BufferedReader reader2 = new BufferedReader(new FileReader(file2));
+			BufferedWriter writer = new BufferedWriter(new FileWriter(outFile));
+
+			String line1 = reader1.readLine();
+			String line2 = reader2.readLine();
+
+			while (line1 != null && line2 != null) {
+				if (line1.compareTo(line2) <= 0) {
+					writer.write(line1);
+					writer.newLine();
+					line1 = reader1.readLine();
+				} else {
+					writer.write(line2);
+					writer.newLine();
+					line2 = reader2.readLine();
+				}
+			}
+
+			while (line1 != null) {
+				writer.write(line1);
+				writer.newLine();
+				line1 = reader1.readLine();
+			}
+
+			while (line2 != null) {
+				writer.write(line2);
+				writer.newLine();
+				line2 = reader2.readLine();
+			}
+
+			reader1.close();
+			reader2.close();
+			writer.close();
+
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 	}
 
 	/**
